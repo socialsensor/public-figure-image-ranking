@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:
+# Purpose:       This .py file is the class file that does all the work
+#                It ranks images of a specific person of interest in a static manner
+#
+# Required libs: python-dateutil, numpy,matplotlib,pyparsing
+# Author:        konkonst
+#
+# Created:       30/03/2014
+# Copyright:     (c) ITI (CERTH) 2014
+# Licence:       <apache licence 2.0>
+#-------------------------------------------------------------------------------
 import json, codecs, os, glob, time, dateutil.parser, collections, datetime, pickle, re, math
 import urllib.request, webbrowser
 import networkx as nx
@@ -8,7 +20,7 @@ import networkx as nx
 class communitystatic:
 
     @classmethod
-    def from_txt(cls,filename,dataset_path_results,dataset_path_tmp):
+    def from_txt(cls,filename,dataset_path_results,dataset_path_tmp,timeLimit = 0):
 
         if not os.path.exists(dataset_path_results):
             os.makedirs(dataset_path_results)
@@ -22,8 +34,6 @@ class communitystatic:
         except:
             stopNodes = []
 
-        timeLimit = 1071561600#1071561600:1355702400
-
         '''Parse the txt files into authors/mentions lists'''
         authors, mentions =  [], []
         totPics,totPeople = 0,0
@@ -31,7 +41,7 @@ class communitystatic:
         userdict = {}
         captiondict = {}
         print(filename)
-        with codecs.open(filename, "r", 'utf-8') as f:
+        with codecs.open(filename, "r", 'utf-8',errors='ignore') as f:
             for line in f:
                 read_line = line.strip().encode('utf-8')
                 read_line = read_line.decode('utf-8')
@@ -39,7 +49,7 @@ class communitystatic:
                     splitLine = read_line.split("\t")
                     dt = dateutil.parser.parse(splitLine[0])
                     mytime = int(time.mktime(dt.timetuple()))
-                    numFaces = int(splitLine[5])
+                    numFaces = int(splitLine[-1])
                     if mytime > timeLimit:
                         peopleLine = splitLine[3].strip(', \n').strip('\n').replace('.','').replace('?','-').replace(', ',',').replace(', ,','').lower().split(",")
                         peopleLine = [x.replace(' - ','_').replace(' ','_') for x in peopleLine if x]
@@ -127,14 +137,14 @@ class communitystatic:
             del(authorsNum, mentionsNum)
         del(adjusrs,adjauthors,adjments,weights,weighted,usersPair, self.authors, self.mentions, self.captiondict)
 
-        '''Write pairs of users to txt file for Gephi'''
-        my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi.txt", "w", "utf-8")
-        my_txt.write("Source,Target,Weight,Type"+"\n")
-        for line in adjList:
-            line = list(line)
-            line.append('Undirected')
-            my_txt.write(",".join(str(x) for x in line) + "\n")
-        my_txt.close()
+        # '''Write pairs of users to txt file for Gephi'''
+        # my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi.txt", "w", "utf-8")
+        # my_txt.write("Source,Target,Weight,Type"+"\n")
+        # for line in adjList:
+        #     line = list(line)
+        #     line.append('Undirected')
+        #     my_txt.write(",".join(str(x) for x in line) + "\n")
+        # my_txt.close()
 
         '''Write pairs of users to txt file for COPRA and invert the uniqueUsers dictionary'''
         if commDetectMethod[0] == 'Copra':

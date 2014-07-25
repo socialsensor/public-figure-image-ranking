@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:
+# Purpose:       This .py file is the class file that does all the work
+#                It ranks images of a specific person of interest in a dynamic manner
+#
+# Required libs: python-dateutil, numpy,matplotlib,pyparsing
+# Author:        konkonst
+#
+# Created:       30/03/2014
+# Copyright:     (c) ITI (CERTH) 2014
+# Licence:       <apache licence 2.0>
+#-------------------------------------------------------------------------------
 import json, codecs, os, glob, time, dateutil.parser, collections, datetime, pickle, re, math
 import urllib.request, webbrowser
 import networkx as nx
@@ -10,7 +22,7 @@ import matplotlib.pyplot as plt
 class communitydynamic:
 
     @classmethod
-    def from_txt(cls,timeSeg,filename,dataset_path_results,dataset_path_tmp):
+    def from_txt(cls,timeSeg,filename,dataset_path_results,dataset_path_tmp,timeLimit = 0):
 
         if not os.path.exists(dataset_path_results):
             os.makedirs(dataset_path_results)
@@ -24,15 +36,13 @@ class communitydynamic:
         except:
             stopNodes = []
 
-        timeLimit = 1071561600#1071561600:1355702400
-
         '''Parse the txt files into authors/mentions/alltime lists'''
         authors, mentions, alltime, photoIds= [], [], [], []
         totPics,totPeople = 0,0
         photodict={}
         captiondict = {}
         print(filename)
-        with codecs.open(filename, "r", 'utf-8') as f:
+        with codecs.open(filename, "r", 'utf-8',errors='ignore') as f:
             for line in f:
                 read_line = line.strip().encode('utf-8')
                 read_line = read_line.decode('utf-8')
@@ -126,7 +136,7 @@ class communitydynamic:
         sesStart, timeslot, timeLimit,commCount,commCountLouv = 0, 0, [], 0, 0
         self.userEvolPagerank, ranklist = {}, {}#evolutionary reciprocal pagerank rank per timeslot
         mymodularity = []
-        print("Forming timeslots")
+        print("Forming timeslots and extracting graph structure...")
         for tmplim in mentionLimit:
             #make timeslot timelimit array
             try:
@@ -170,19 +180,19 @@ class communitydynamic:
 
             # '''Write pairs of users to txt file for Gephi'''
             #Make temp folder if non existant
-            if not os.path.exists(self.dataset_path_tmp[:-4]+"forGephi/"+self.fileTitle):
-                os.makedirs(self.dataset_path_tmp[:-4]+"forGephi/"+self.fileTitle)
-            try:
-                my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi/" + self.fileTitle + '/partition_' + fileNum + '_' + datetime.datetime.fromtimestamp(int(self.alltime[int(tmplim)])).strftime('%b_%d_%y') + ".txt", "w", "utf-8")
-            except:
-                my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi/" + self.fileTitle + '/partition_' + fileNum + '_' + datetime.datetime.fromtimestamp(int(self.alltime[-1])).strftime('%b_%d_%y') + ".txt", "w", "utf-8")
-                pass
-            my_txt.write("Source,Target,Weight,Type" + "\n")
-            for line in adjList:
-                line = list(line)
-                line.append('Undirected')
-                my_txt.write(",".join(str(x) for x in line) + "\n")
-            my_txt.close()
+            # if not os.path.exists(self.dataset_path_tmp[:-4]+"forGephi/"+self.fileTitle):
+            #     os.makedirs(self.dataset_path_tmp[:-4]+"forGephi/"+self.fileTitle)
+            # try:
+            #     my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi/" + self.fileTitle + '/partition_' + fileNum + '_' + datetime.datetime.fromtimestamp(int(self.alltime[int(tmplim)])).strftime('%b_%d_%y') + ".txt", "w", "utf-8")
+            # except:
+            #     my_txt = codecs.open(self.dataset_path_tmp[:-4]+"forGephi/" + self.fileTitle + '/partition_' + fileNum + '_' + datetime.datetime.fromtimestamp(int(self.alltime[-1])).strftime('%b_%d_%y') + ".txt", "w", "utf-8")
+            #     pass
+            # my_txt.write("Source,Target,Weight,Type" + "\n")
+            # for line in adjList:
+            #     line = list(line)
+            #     line.append('Undirected')
+            #     my_txt.write(",".join(str(x) for x in line) + "\n")
+            # my_txt.close()
 
             '''Write pairs of users to txt file for COPRA and invert the uniqueUsers dictionary'''
             if commDetectMethod[0] == 'Copra':

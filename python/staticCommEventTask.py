@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:
+# Purpose:       This .py file is the class file that does all the work
+#                It ranks images in specific events
+#
+# Required libs: python-dateutil, numpy,matplotlib,pyparsing
+# Author:        konkonst
+#
+# Created:       30/03/2014
+# Copyright:     (c) ITI (CERTH) 2014
+# Licence:       <apache licence 2.0>
+#-------------------------------------------------------------------------------
 import json, codecs, os, glob, time, dateutil.parser, collections, datetime, pickle, re, math
 import urllib.request,webbrowser
 import networkx as nx
@@ -8,7 +20,7 @@ import networkx as nx
 class communitystatic:
 
     @classmethod
-    def from_txt(cls,filename,dataset_path_results,dataset_path_tmp):
+    def from_txt(cls,filename,dataset_path_results,dataset_path_tmp,timeLimit = 0):
 
         #Nodes that will be removed
         try:
@@ -18,7 +30,6 @@ class communitystatic:
         except:
             stopNodes = []
 
-        timeLimit = 1071561600#1071561600:1355702400
         '''Parse the txt files into authors/mentions/alltime lists'''
         authors, mentions =  {}, {}
         totPics,totPeople = 0,0
@@ -27,7 +38,7 @@ class communitystatic:
         captiondict = {}
         emptyvalues = 0
         print(filename)
-        with codecs.open(filename, "r", 'utf-8') as f:
+        with codecs.open(filename, "r", 'utf-8',errors='ignore') as f:
             for line in f:
                 read_line = line.strip().encode('utf-8')
                 read_line = read_line.decode('utf-8')
@@ -110,7 +121,7 @@ class communitystatic:
         import community,link_clustering_din
         import Demon as D
 
-        '''Write all of the captions of the event to a file'''
+        # '''Write all of the captions of the event to a file'''
         # allcaptions = []
         # for pic,(caption) in self.captiondict[eventIdInput].items():
         #     allcaptions.append(caption)
@@ -149,16 +160,16 @@ class communitystatic:
         adjListNum = list(zip(authorsNum, mentionsNum, weights))
         del(adjusrs,adjauthors,adjments,weights,weighted,usersPair, authorsNum, mentionsNum, self.authors,self.mentions, self.captiondict)
 
-        '''Write pairs of users to txt file for Gephi'''
-        if not os.path.exists(self.dataset_path_results+"forGephi/"):
-            os.makedirs(self.dataset_path_results+"forGephi/")
-        my_txt = codecs.open(self.dataset_path_results+"forGephi/event_"+str(self.eventIdInput)+".txt", "w", "utf-8")
-        my_txt.write("Source,Target,Weight,Type"+"\n")
-        for line in adjList:
-            line = list(line)
-            line.append('Undirected')
-            my_txt.write(",".join(str(x) for x in line) + "\n")
-        my_txt.close()
+        # '''Write pairs of users to txt file for Gephi'''
+        # if not os.path.exists(self.dataset_path_results+"forGephi/"):
+        #     os.makedirs(self.dataset_path_results+"forGephi/")
+        # my_txt = codecs.open(self.dataset_path_results+"forGephi/event_"+str(self.eventIdInput)+".txt", "w", "utf-8")
+        # my_txt.write("Source,Target,Weight,Type"+"\n")
+        # for line in adjList:
+        #     line = list(line)
+        #     line.append('Undirected')
+        #     my_txt.write(",".join(str(x) for x in line) + "\n")
+        # my_txt.close()
 
         '''Write pairs of users to txt file for COPRA and invert the uniqueUsers dictionary'''
         if commDetectMethod[0] == 'Copra':

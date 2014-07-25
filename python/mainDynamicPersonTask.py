@@ -8,8 +8,8 @@
 # Required libs: python-dateutil, numpy,matplotlib,pyparsing
 # Author:        konkonst
 #
-# Created:       20/08/2013
-# Copyright:     (c) ITI (CERTH) 2013
+# Created:       30/03/2014
+# Copyright:     (c) ITI (CERTH) 2014
 # Licence:       <apache licence 2.0>
 #-------------------------------------------------------------------------------
 import time,os,pickle,glob,codecs
@@ -22,8 +22,8 @@ print(time.asctime( time.localtime(time.time()) ))
 dataextract = 1
 #User sets desired time intervals in seconds
 timeSeg=[86400*30,86400*365]#[86400*365]#
-#User sets desired time interval
-fileTitleChoices=["per1months","per12months"]#["per1months"]#
+#Provide a time Limit (unix timestamp) about when the dataset begins in case you only want part of the dataset. If it is set to 0 the whole dataset is considered.
+timeLimit = 0 #1071561600 
 #Community detection method. 'Ahn','Demon' and 'Copra' for overlapping and 'Louvain' for non. Ahn carries a threshold.
 commDetectMethod = ['Demon', 0.66]
 #User sets desired number of displayed top images
@@ -41,21 +41,22 @@ delFolders = 0
 '''Functions'''
 t = time.time()
 
-filename = glob.glob("./data/txt/*.txt")
-filename = [x for x in filename if x[11:].startswith('noDups')]
+filename = [f for f in os.listdir("./data/txt/")]
 for idx,files in enumerate(filename):
-    print(str(idx+1) + '.' + files[11:-4])
+    print(str(idx+1) + '.' + files)
 
 selection = int(input('Select a dataset from the above: '))-1
 
-dataset_path_results = "./data/GETTY_"+filename[selection][24:-4]+"/dynamicPersonCentered_"+commDetectMethod[0]+"/results/"
-dataset_path_tmp = "./data/GETTY_"+filename[selection][24:-4]+"/dynamicPersonCentered_"+commDetectMethod[0]+"/tmp/"
+dataset_path_results = "./data/"+filename[selection][:-4]+"/dynamicPersonCentered_"+commDetectMethod[0]+"/results/"
+dataset_path_tmp = "./data/"+filename[selection][:-4]+"/dynamicPersonCentered_"+commDetectMethod[0]+"/tmp/"
+datasetFilename = './data/txt/'+filename[selection]
+
 if not os.path.exists(dataset_path_results):
     os.makedirs(dataset_path_results)
     os.makedirs(dataset_path_tmp)
 
 if dataextract==1:#Start from scratch
-    data = communitydynamic.from_txt(timeSeg,filename[selection],dataset_path_results,dataset_path_tmp)
+    data = communitydynamic.from_txt(timeSeg,datasetFilename,dataset_path_results,dataset_path_tmp,timeLimit=timeLimit)
     dataPck = open(dataset_path_tmp+"allPersondata.pck", "wb")
     pickle.dump(data, dataPck , protocol = 2)
     dataPck.close()
@@ -64,16 +65,16 @@ if dataextract==1:#Start from scratch
 
 fileTitleChoices = []
 for seg in timeSeg:
-    if timeSegInput >= 86400 and timeSegInput < 604800:
-        timeNum = timeSegInput / 86400
+    if seg >= 86400 and seg < 604800:
+        timeNum = seg / 86400
         timeTitle = "per" + str(int(timeNum)) + "days"
-    elif timeSegInput>= 604800 and timeSegInput < 2592000:
-        timeNum = timeSegInput / 604800
+    elif seg>= 604800 and seg < 2592000:
+        timeNum = seg / 604800
         timeTitle = "per" + str(int(timeNum)) + "weeks"
     else:
-        timeNum = timeSegInput / 2592000
+        timeNum = seg / 2592000
         timeTitle = "per" + str(int(timeNum)) + "months"
-    fileTitleChoices.append[timeTitle]
+    fileTitleChoices.append(timeTitle)
 
 timeSelectionChoices = range(len(fileTitleChoices))#
 if dataextract==1 or dataextract==2:#If the basic data (authors, mentions, time) has been created
@@ -81,6 +82,8 @@ if dataextract==1 or dataextract==2:#If the basic data (authors, mentions, time)
         data = pickle.load(open(dataset_path_tmp+"allPersondata.pck", "rb"))
         captiondict = data.captiondict
         fileTitle = fileTitleChoices[timeSelection]
+        if not os.path.exists(dataset_path_results+fileTitle+'/'):
+            os.makedirs(dataset_path_results+fileTitle+'/')
         print('dynamic Community detection method selected is :'+commDetectMethod[0])
         datadynamic=data.extraction(commDetectMethod, timeSeg[timeSelection])
         del(data)

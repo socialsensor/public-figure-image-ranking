@@ -8,11 +8,11 @@
 # Required libs: python-dateutil, numpy,matplotlib,pyparsing
 # Author:        konkonst
 #
-# Created:       20/08/2013
-# Copyright:     (c) ITI (CERTH) 2013
+# Created:       30/03/2014
+# Copyright:     (c) ITI (CERTH) 2014
 # Licence:       <apache licence 2.0>
 #-------------------------------------------------------------------------------
-import time,os,pickle, glob
+import time,os,pickle, glob, eventPopularity
 from staticCommEventTask import communitystatic
 print('staticCommEventCentered')
 print(time.asctime( time.localtime(time.time()) ))
@@ -20,6 +20,8 @@ print(time.asctime( time.localtime(time.time()) ))
 '''PARAMETERS'''
 #Construct the data class from scratch: 1-yes / 2- perform community detection / else- perform just the ranking process
 dataextract = 1
+#Provide a time Limit (unix timestamp) about when the dataset begins in case you only want part of the dataset. If it is set to 0 the whole dataset is considered.
+timeLimit = 0 #1071561600 
 #Community detection method. 'Ahn','Demon' and 'Copra' for overlapping and 'Louvain' for non. Ahn carries a threshold.
 commDetectMethod = ['Demon', 0.66]
 #User sets desired number of displayed top images
@@ -30,29 +32,29 @@ topEvents = 100
 delFolders = 0
 #If there are any nodes that should not be considered, please place them in './data/txt/stopNodes.txt'
 
-filename = glob.glob("./data/txt/*.txt")
-filename = [x for x in filename if x[11:].startswith('noDups')]
+
+filename = [f for f in os.listdir("./data/txt/")]
 for idx,files in enumerate(filename):
-    print(str(idx+1) + '.' + files[11:-4])
+    print(str(idx+1) + '.' + files)
 
 selection = int(input('Select a dataset from the above: '))-1
 
-dataset_path_results = "./data/GETTY_"+filename[selection][24:-4]+"/staticEventCentered_"+commDetectMethod[0]+"/results/"
-dataset_path_tmp = "./data/GETTY_"+filename[selection][24:-4]+"/staticEventCentered_"+commDetectMethod[0]+"/tmp/"
-
-if not os.path.exists(dataset_path_results+"rankedEvents.txt"):
-    print('You need to run the eventPopularity.py first. Look into that...')
-    exit()
+dataset_path_results = "./data/"+filename[selection][:-4]+"/staticEventCentered_"+commDetectMethod[0]+"/results/"
+dataset_path_tmp = "./data/"+filename[selection][:-4]+"/staticEventCentered_"+commDetectMethod[0]+"/tmp/"
+datasetFilename = './data/txt/'+filename[selection]
 
 if not os.path.exists(dataset_path_results):
     os.makedirs(dataset_path_results)
     os.makedirs(dataset_path_tmp)
 
+if not os.path.exists(dataset_path_results+"rankedEvents.txt"):
+    eventPopularity.popEvent(datasetFilename, dataset_path_results, dataset_path_tmp, commDetectMethod,timeLimit=timeLimit)
+
 '''Functions'''
 t = time.time()
 
 if dataextract==1:
-    data = communitystatic.from_txt(filename[selection],dataset_path_results,dataset_path_tmp)
+    data = communitystatic.from_txt(datasetFilename,dataset_path_results,dataset_path_tmp,timeLimit=timeLimit)
     dataPck = open(dataset_path_tmp + "allEventdata.pck", "wb")
     pickle.dump(data, dataPck , protocol = 2)
     dataPck.close()
