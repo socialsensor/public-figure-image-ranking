@@ -14,7 +14,7 @@ This distribution contains the following:
 
 Any new data (txt files) to be analysed should be placed in the _../data/txt/_ folder.
 In order for the python files to work, the data should be consistent for all the methods and in the following form:  
-_date \TAB eventId \TAB imageURL \TAB peopleTags(comma separated) \TAB caption \newline_  
+<code>_date \TAB eventId \TAB imageURL \TAB peopleTags(comma separated) \TAB caption \newline_</code>   
 (In the case where an entry is not available, insert a single space for structure purposes. In the case where only one person is tagged in the image, that image will be skipped. In the case where the images are not stored on the web, substituting the _imageURL_ entry with the _imageDirectory_ entry will also work. There is also an option to include a stopNodes.txt in the _./data/txt_ directory which may contain unwanted nodes.)
 
 ###Code###
